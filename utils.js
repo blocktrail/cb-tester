@@ -26,31 +26,34 @@ function requestUnconfirmedTransaction(callback) {
   })
 }
 
-function requestNewUnspents(amount, callback) {
+function requestNewUnspent(callback) {
+  var key = bitcoinjs.ECKey.makeRandom();
+  var value = 1e4
+
   httpify({
-    method: 'GET',
-    url: 'https://testnet.helloblock.io/v1/faucet?type=' + amount
+    method: 'POST',
+    url: 'https://api.blocktrail.com/v1/tBTC/faucet/withdrawl?api_key=' + (process.env.BLOCKTRAIL_API_KEY || "c0bd8155c66e3fb148bb1664adc1e4dacd872548"),
+    headers: { 'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      address: key.pub.getAddress(bitcoinjs.networks.testnet).toString(),
+      amount: value
+    })
   }, function(err, res) {
     if (err) return callback(err)
 
-    var privKey = bitcoinjs.ECKey.fromWIF(res.body.data.privateKeyWIF)
-    var txs = res.body.data.unspents.map(function(utxo) {
-      var tx = new bitcoinjs.TransactionBuilder()
-      tx.addInput(utxo.txHash, utxo.index)
-      tx.addOutput('mkgqK39KnEkb1ockFBuGJy1pHQVN74oQDP', Math.min(6000, utxo.value))
-      tx.sign(0, privKey)
+    var txb = new bitcoinjs.TransactionBuilder()
+    var unspent = res.body
 
-      return tx.build()
-    })
+    txb.addInput(unspent.txHash, unspent.index)
+    txb.addOutput('mkgqK39KnEkb1ockFBuGJy1pHQVN74oQDP', value)
+    txb.sign(0, key)
 
-    if (txs.length !== amount) return callback(new Error('txs.length !== amount'))
-
-    callback(undefined, txs)
+    callback(undefined, txb.build())
   })
 }
 
 module.exports = {
   createNewAddress: createNewAddress,
   requestUnconfirmedTransaction: requestUnconfirmedTransaction,
-  requestNewUnspents: requestNewUnspents
+  requestNewUnspent: requestNewUnspent
 }
