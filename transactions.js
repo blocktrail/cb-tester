@@ -164,19 +164,10 @@ module.exports = function(options) {
 
             // typeForce(types.transactions.propagate, result)
             // assert.strictEqual(result, txId)
-            assert.strictEqual(result, null)
+            assert.strictEqual(result.txId, txId)
 
             done()
           })
-        })
-      })
-
-      it('works for n of 0', function(done) {
-        blockchain.transactions.propagate([], function(err, result) {
-          assert.ifError(err)
-          assert.strictEqual(result, null)
-
-          return done()
         })
       })
 
