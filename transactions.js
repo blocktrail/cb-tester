@@ -164,7 +164,7 @@ module.exports = function(options) {
 
             // typeForce(types.transactions.propagate, result)
             // assert.strictEqual(result, txId)
-            assert.strictEqual(result.txId, txId)
+            assert.strictEqual(result.txIds[0], txId)
 
             done()
           })
